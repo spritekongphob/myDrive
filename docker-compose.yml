@@ -1,0 +1,48 @@
+services:
+    app:
+        container_name: mydrive
+        image: kylehoell/mydrive:latest
+        volumes:
+            - mydrive-data:/data/
+            - mydrive-temp:/temp/
+        ports:
+            - "${HTTP_PORT:-3000}:3000"
+        env_file:
+            - .env
+
+    mongo:
+        image: mongo:8
+        container_name: mongo
+        restart: always
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: username
+            MONGO_INITDB_ROOT_PASSWORD: password
+        expose:
+            - 27017
+        volumes:
+            - db-data:/data/db
+        healthcheck:
+            test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+            timeout: 10s
+            interval: 10s
+            retries: 10
+            start_period: 10s
+
+    minio:
+        image: minio/minio:latest
+        container_name: minio
+        environment:
+            MINIO_ROOT_USER: admin
+            MINIO_ROOT_PASSWORD: admin123
+        command: server /data --console-address ":9001"
+        ports:
+            - "9000:9000"
+            - "9001:9001"
+        volumes:
+            - minio-data:/data
+
+volumes:
+    mydrive-data:
+    mydrive-temp:
+    db-data:
+    minio-data: 
